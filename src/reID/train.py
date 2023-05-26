@@ -6,6 +6,8 @@ from dataset import PlushieTrainDataset
 from model import SiameseNetwork
 from transforms import Transforms
 from utils import DeviceDataLoader, accuracy, get_default_device, to_device
+import torch.nn as nn
+import torch.nn.functional as F
 
 
 def loss_batch(model, loss_func, anchor, image, label, opt=None, metric=None): # Update model weights and return metrics given xb, yb, model
@@ -67,7 +69,16 @@ def evaluate(model, loss_func, val_dl, metric=None):
         return avg_loss, total, avg_metric
 
 
+class ContrastiveLoss(nn.Module):
+    def __init__(self, margin=2.0):
+        super(ContrastiveLoss, self).__init__()
+        self.margin = margin
 
+    def forward(self, output1, output2, label):
+        euclidean_distance = F.pairwise_distance(output1, output2)
+        loss_contrastive = torch.mean((label) * torch.pow(euclidean_distance, 2) +
+                                      (1 - label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2))
+        return loss_contrastive
 
 
 def main():
@@ -100,7 +111,7 @@ def main():
     val_dl = DeviceDataLoader(val_dl, device)
     to_device(network, device)
   
-    criterion = torch.nn.BCEWithLogitsLoss()
+    criterion = ContrastiveLoss()
     optimizer = torch.optim.Adam
 
 
