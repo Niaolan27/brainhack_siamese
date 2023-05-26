@@ -71,9 +71,9 @@ def evaluate(model, loss_func, val_dl, metric=None):
 
 
 def main():
-    train_filepath = ""
+    #train_filepath = ""
     train_img_dir = ""
-    val_filepath = ""
+    #val_filepath = ""
     val_img_dir = ""
     train_bs = 32
     test_bs = 5
@@ -84,8 +84,8 @@ def main():
     torch.autograd.set_detect_anomaly(True)
     
     transform = Transforms()
-    train_dataset = PlushieTrainDataset(filepath=train_filepath, img_dir=train_img_dir, transform=transform)
-    valid_dataset = PlushieTrainDataset(filepath=val_filepath, img_dir=val_img_dir, transform=transform)
+    train_dataset = PlushieTrainDataset(img_dir=train_img_dir, transform=transform)
+    valid_dataset = PlushieTrainDataset(img_dir=val_img_dir, transform=transform)
     network = SiameseNetwork()
     
 
