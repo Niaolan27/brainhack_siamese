@@ -39,7 +39,7 @@ class SiameseNetwork(nn.Module):
     def forward(self, input1, input2):
         output1 = self.get_embeddings(input1)
         output2 = self.get_embeddings(input2)
-        output = cat((output1, output2), 1)
-        output = self.fc(output)
+        #output = cat((output1, output2), 1)
+        #output = self.fc(output)
         
-        return output
+        return output1, output2

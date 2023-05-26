@@ -11,8 +11,8 @@ import torch.nn.functional as F
 
 
 def loss_batch(model, loss_func, anchor, image, label, opt=None, metric=None): # Update model weights and return metrics given xb, yb, model
-    preds = model(anchor, image)
-    loss = loss_func(preds, label.unsqueeze(1).float())
+    output1, output2 = model(anchor, image)
+    loss = loss_func(output1, output2, label)
     
     if opt is not None:
         loss.backward()
@@ -21,9 +21,9 @@ def loss_batch(model, loss_func, anchor, image, label, opt=None, metric=None): #
         
     metric_result = None
     if metric is not None:
-        metric_result = metric(preds, label)
+        metric_result = metric(output1, output2, label)
         
-    return loss.item(), len(anchor), metric_result
+    return loss, len(anchor), metric_result
 
 
 def fit(epochs, model, loss_func, train_dl, val_dl, opt_func=torch.optim.SGD, lr=0.01, metric=None):
@@ -83,9 +83,9 @@ class ContrastiveLoss(nn.Module):
 
 def main():
     #train_filepath = ""
-    train_img_dir = ""
+    train_img_dir = "/content/drive/MyDrive/Brainhack/ReID/datasets/reID_dataset"
     #val_filepath = ""
-    val_img_dir = ""
+    val_img_dir = "/content/drive/MyDrive/Brainhack/ReID/datasets/reID_dataset"
     train_bs = 32
     test_bs = 5
     num_epochs = 5

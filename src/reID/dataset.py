@@ -83,9 +83,9 @@ class PlushieTrainDataset2(Dataset):
 
 def main():
     t = Transforms()
-    filepath = ""
-    img_dir = ""
-    d = PlushieTrainDataset(filepath=filepath, img_dir=img_dir, transform=t)
+    #filepath = ""
+    img_dir = "/content/drive/MyDrive/Brainhack/ReID/datasets/reID_dataset"
+    d = PlushieTrainDataset(img_dir=img_dir, transform=t)
     
     e = d[0]
     axs = plt.figure(figsize=(9, 9)).subplots(1, 2)
