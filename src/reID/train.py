@@ -8,7 +8,7 @@ from model import SiameseNetwork
 # from utils import DeviceDataLoader, accuracy, get_default_device, to_device
 import torch.nn as nn
 import torch.nn.functional as F
-from test import predict_image
+# from test import predict_image
 import torch as tt
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -63,6 +63,10 @@ def main():
         return net
     #set the device to cuda
     device = torch.device('cuda' if tt.cuda.is_available() else 'cpu')
+    print(f'device used {device}')
     model = train(10) #10 epochs
-    torch.save(model.state_dict(), "model.pt")
+    torch.save(model.state_dict(), "reid_model.pt")
     print("Model Saved Successfully") 
+
+if __name__ == '__main__':
+  main()
