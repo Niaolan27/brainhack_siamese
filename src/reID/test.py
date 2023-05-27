@@ -11,7 +11,7 @@ def test(model):
     # Load the test dataset
     device = tt.device('cuda' if tt.cuda.is_available() else 'cpu')
     print(device)
-    test_dir = '/content/drive/MyDrive/Brainhack/ReID/datasets/reducedDataset'
+    test_dir = '/content/drive/MyDrive/Brainhack/ReID/datasets/testDataset'
     test_dataset = SiameseDataset(test_dir, transform=transforms.Compose([transforms.Resize((105,105)),
                                                                                 transforms.ToTensor()
                                                                                 ]))
