@@ -22,7 +22,8 @@ def loss_batch(model, loss_func, anchor, image, label, opt=None, metric=None): #
         
     metric_result = None
     if metric is not None:
-        pred = predict_image(output1,output2)
+        print(f'metric stage {anchor},{image}')
+        pred = predict_image(anchor,image)
         metric_result = metric(pred, label)
         
     return loss, len(anchor), metric_result
@@ -37,6 +38,7 @@ def fit(epochs, model, loss_func, train_dl, val_dl, opt_func=torch.optim.SGD, lr
         model.train() # Setting for pytorch - training mode
         for anchor,image,label in train_dl:
             train_loss, _, _ = loss_batch(model, loss_func, anchor, image, label, opt) # update weights
+            print(f'batch loss is {train_loss}')
             
         model.eval() # Setting - eval mode
         val_loss, total, val_metric = evaluate(model, loss_func, val_dl, metric)
@@ -88,8 +90,8 @@ def main():
     train_img_dir = "/content/drive/MyDrive/Brainhack/ReID/datasets/reID_dataset"
     #val_filepath = ""
     val_img_dir = "/content/drive/MyDrive/Brainhack/ReID/datasets/reID_dataset"
-    train_bs = 32
-    test_bs = 5
+    train_bs = 256
+    test_bs = 128
     num_epochs = 5
     lr = 0.005
     val_ratio = 0.2

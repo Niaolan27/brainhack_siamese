@@ -13,11 +13,13 @@ import torch.nn.functional as F
 
 
 def predict_image(target, img, transform=None):
+    print(f'predict image {target} and {img}')
     xb, xb2 = transform(target).unsqueeze(0), transform(img).unsqueeze(0) # Convert to batch of 1
     model.eval()
     yb, yb2 = model(xb.to(device), xb2.to(device))
-    euclidean_distance = F.pairwise_distance(output1, output2)
-    return euclidean_distance
+    euclidean_distance = F.pairwise_distance(yb, yb2)
+    predictions = (euclidean_distance < 1).float()
+    return predictions
 
 
 device = get_default_device()

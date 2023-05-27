@@ -21,7 +21,7 @@ class SiameseNetwork(nn.Module):
         self.fc_in_features = self.resnet.fc.in_features
         
         # remove the last layer of resnet18 (linear layer which is before avgpool layer)
-        self.resnet = nn.Sequential(*(list(self.resnet.children())[:-1]))
+        #self.resnet = nn.Sequential(*(list(self.resnet.children())[:-1]))
 
         # add linear layers to compare between the features of the two images
         self.fc = nn.Sequential(

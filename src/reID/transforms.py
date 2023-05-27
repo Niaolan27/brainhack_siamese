@@ -1,8 +1,10 @@
 import torchvision.transforms as tt
 import cv2
+import numpy as np
 
 class BGR2RGB:
     def __call__(self, image):
+        image = np.array(image)
         return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 class SquarePad:
