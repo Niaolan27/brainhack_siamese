@@ -2,75 +2,19 @@ import numpy as np
 
 import torch
 
-from dataset import PlushieTrainDataset
+from dataset import SiameseDataset
 from model import SiameseNetwork
-from transforms import Transforms
-from utils import DeviceDataLoader, accuracy, get_default_device, to_device
+# from transforms import Transforms
+# from utils import DeviceDataLoader, accuracy, get_default_device, to_device
 import torch.nn as nn
 import torch.nn.functional as F
 from test import predict_image
+import torch as tt
+from torchvision import transforms
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 
-def loss_batch(model, loss_func, anchor, image, label, opt=None, metric=None): # Update model weights and return metrics given xb, yb, model
-    output1, output2 = model(anchor, image)
-    loss = loss_func(output1, output2, label)
-    
-    if opt is not None:
-        loss.backward()
-        opt.step()
-        opt.zero_grad()
-        
-    metric_result = None
-    if metric is not None:
-        print(f'metric stage {anchor},{image}')
-        pred = predict_image(anchor,image)
-        metric_result = metric(pred, label)
-        
-    return loss, len(anchor), metric_result
-
-
-def fit(epochs, model, loss_func, train_dl, val_dl, opt_func=torch.optim.SGD, lr=0.01, metric=None):
-    train_losses, val_losses, val_metrics = [] , [], []
-    
-    opt = opt_func(model.parameters(), lr=lr)
-    
-    for epoch in range(1, epochs+1):
-        model.train() # Setting for pytorch - training mode
-        for anchor,image,label in train_dl:
-            train_loss, _, _ = loss_batch(model, loss_func, anchor, image, label, opt) # update weights
-            print(f'batch loss is {train_loss}')
-            
-        model.eval() # Setting - eval mode
-        val_loss, total, val_metric = evaluate(model, loss_func, val_dl, metric)
-        
-        train_losses.append(train_loss)
-        val_losses.append(val_loss)
-        val_metrics.append(val_metric)
-        
-        if metric is None:
-            print("Epoch [{}], train_loss: {:.4f}, val_loss: {:.4f}".format(
-            epoch, train_loss, val_loss))
-        else:
-            print("Epoch [{}], train_loss: {:.4f}, val_loss: {:.4f}, val_{}: {:.4f}".format(
-            epoch, train_loss, val_loss, metric.__name__, val_metric))
-            
-    return train_losses, val_losses, val_metrics
-
-
-def evaluate(model, loss_func, val_dl, metric=None):
-    with torch.no_grad():
-        results = [loss_batch(model, loss_func, anchor, image, label, metric=metric) for anchor, image, label in val_dl]
-        
-        losses, nums, metrics = zip(*results)
-        total = np.sum(nums)
-        
-        avg_loss = np.sum(np.multiply(losses, nums)) / total
-        
-        avg_metric = None
-        if metric is not None:
-            avg_metric = np.sum(np.multiply(metrics, nums)) / total
-            
-        return avg_loss, total, avg_metric
 
 
 class ContrastiveLoss(nn.Module):
@@ -84,50 +28,41 @@ class ContrastiveLoss(nn.Module):
                                       (1 - label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2))
         return loss_contrastive
 
-
 def main():
-    #train_filepath = ""
-    train_img_dir = "/content/drive/MyDrive/Brainhack/ReID/datasets/reID_dataset"
-    #val_filepath = ""
-    val_img_dir = "/content/drive/MyDrive/Brainhack/ReID/datasets/reID_dataset"
-    train_bs = 256
-    test_bs = 128
-    num_epochs = 5
-    lr = 0.005
-    val_ratio = 0.2
-    
-    torch.autograd.set_detect_anomaly(True)
-    
-    transform = Transforms()
-    train_dataset = PlushieTrainDataset(img_dir=train_img_dir, transform=transform)
-    valid_dataset = PlushieTrainDataset(img_dir=val_img_dir, transform=transform)
-    network = SiameseNetwork()
-    
-
-    print("The length of Train set is {}".format(len(train_dataset)))
-    print("The length of Valid set is {}".format(len(valid_dataset)))
-
-    train_dl = torch.utils.data.DataLoader(train_dataset, batch_size=train_bs, shuffle=True, num_workers=4)
-    val_dl = torch.utils.data.DataLoader(valid_dataset, batch_size=test_bs, shuffle=True, num_workers=4)
-
-    device = get_default_device()
-    train_dl = DeviceDataLoader(train_dl, device)
-    val_dl = DeviceDataLoader(val_dl, device)
-    to_device(network, device)
-  
+    # Declare Siamese Network
+    net = SiameseNetwork().cuda()
+    # Decalre Loss Function
     criterion = ContrastiveLoss()
-    optimizer = torch.optim.Adam
-
-
-    train_losses, val_losses, val_metrics = fit(num_epochs, network, criterion, 
-                                            train_dl, val_dl, optimizer, lr, accuracy)
-
-    torch.save(network.state_dict(), 'model.pth')
-
-    
-
-
-
-
-if __name__ == "__main__":
-    main()
+    # Declare Optimizer
+    optimizer = tt.optim.Adam(net.parameters(), lr=1e-3, weight_decay=0.0005)
+    #load training data
+    train_dir = '/content/drive/MyDrive/Brainhack/ReID/datasets/reducedDataset'
+    train_dataset = SiameseDataset(train_dir, transform=transforms.Compose([transforms.Resize((105,105)),
+                                                                            transforms.ToTensor()
+                                                                            ]))
+    train_dataloader = DataLoader(train_dataset, num_workers=4,batch_size=32,shuffle=True)
+    #train the model
+    def train(epochs):
+        loss=[] 
+        counter=[]
+        iteration_number = 0
+        for epoch in range(1,epochs):
+            for i, data in enumerate(train_dataloader,0):
+                img0, img1 , label = data
+                img0, img1 , label = img0.cuda(), img1.cuda() , label.cuda()
+                optimizer.zero_grad()
+                output1,output2 = net(img0,img1)
+                loss_contrastive = criterion(output1,output2,label)
+                loss_contrastive.backward()
+                optimizer.step()    
+            print("Epoch {}\n Current loss {}\n".format(epoch,loss_contrastive.item()))
+            iteration_number += 10
+            counter.append(iteration_number)
+            loss.append(loss_contrastive.item())
+        plt.plot(counter, loss)
+        return net
+    #set the device to cuda
+    device = torch.device('cuda' if tt.cuda.is_available() else 'cpu')
+    model = train(10) #10 epochs
+    torch.save(model.state_dict(), "model.pt")
+    print("Model Saved Successfully") 
