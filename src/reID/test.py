@@ -8,14 +8,16 @@ import torch
 from model import SiameseNetwork
 from utils import get_default_device, show_img, to_device
 from transforms import Transforms
+import torch.nn.functional as F
 
 
 
 def predict_image(target, img, transform=None):
     xb, xb2 = transform(target).unsqueeze(0), transform(img).unsqueeze(0) # Convert to batch of 1
     model.eval()
-    yb = model(xb.to(device), xb2.to(device))
-    return yb
+    yb, yb2 = model(xb.to(device), xb2.to(device))
+    euclidean_distance = F.pairwise_distance(output1, output2)
+    return euclidean_distance
 
 
 device = get_default_device()

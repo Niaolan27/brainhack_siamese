@@ -8,6 +8,7 @@ from transforms import Transforms
 from utils import DeviceDataLoader, accuracy, get_default_device, to_device
 import torch.nn as nn
 import torch.nn.functional as F
+from test import predict_image
 
 
 def loss_batch(model, loss_func, anchor, image, label, opt=None, metric=None): # Update model weights and return metrics given xb, yb, model
@@ -21,7 +22,8 @@ def loss_batch(model, loss_func, anchor, image, label, opt=None, metric=None): #
         
     metric_result = None
     if metric is not None:
-        metric_result = metric(output1, output2, label)
+        pred = predict_image(output1,output2)
+        metric_result = metric(pred, label)
         
     return loss, len(anchor), metric_result
 
