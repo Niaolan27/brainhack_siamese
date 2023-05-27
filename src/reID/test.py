@@ -29,6 +29,7 @@ to_device(model, device)
 
 t = Transforms()
 
+'''
 target = ""
 img = ""
 
@@ -41,3 +42,4 @@ show_img(target, img)
 
 # -3.3546
 
+'''
