@@ -4,7 +4,7 @@ import torch
 
 from dataset import SiameseDataset
 from model import SiameseNetwork
-# from transforms import Transforms
+from transforms import Transforms
 # from utils import DeviceDataLoader, accuracy, get_default_device, to_device
 import torch.nn as nn
 import torch.nn.functional as F
@@ -37,9 +37,7 @@ def main():
     optimizer = tt.optim.Adam(net.parameters(), lr=1e-3, weight_decay=0.0005)
     #load training data
     train_dir = '/content/drive/MyDrive/Brainhack/ReID/datasets/reducedDataset'
-    train_dataset = SiameseDataset(train_dir, transform=transforms.Compose([transforms.Resize((105,105)),
-                                                                            transforms.ToTensor()
-                                                                            ]))
+    train_dataset = SiameseDataset(train_dir, transform=Transforms())
     train_dataloader = DataLoader(train_dataset, num_workers=4,batch_size=32,shuffle=True)
     #train the model
     def train(epochs):
