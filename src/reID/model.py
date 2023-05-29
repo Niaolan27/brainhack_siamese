@@ -1,10 +1,25 @@
 #create a siamese network
 import torch.nn as nn
+from torchvision.models import resnet50, ResNet50_Weights
 
 class SiameseNetwork(nn.Module):
     def __init__(self):
         super(SiameseNetwork, self).__init__()
         # Setting up the Sequential of CNN Layers
+        self.resnet = resnet50(ResNet50_Weights.DEFAULT)
+        self.fc_in_features = self.resnet.fc.in_features
+        self.resnet = nn.Sequential(*(list(self.resnet.children())[:-1])) #remove the last fc layer
+        self.fc1 = nn.Sequential(
+            nn.Linear(self.fc_in_features, 1024),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p=0.5),
+            
+            nn.Linear(1024, 128),
+            nn.ReLU(inplace=True),
+            
+            nn.Linear(128,2))
+        
+        '''
         self.cnn1 = nn.Sequential(
             nn.Conv2d(3, 96, kernel_size=11,stride=1),
             nn.ReLU(inplace=True),
@@ -26,19 +41,11 @@ class SiameseNetwork(nn.Module):
             nn.Dropout2d(p=0.3),
         )
         # Defining the fully connected layers
-        self.fc1 = nn.Sequential(
-            nn.Linear(30976, 1024),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5),
-            
-            nn.Linear(1024, 128),
-            nn.ReLU(inplace=True),
-            
-            nn.Linear(128,2))
+        '''
         
     def forward_once(self, x):
         # Forward pass 
-        output = self.cnn1(x)
+        output = self.resnet(x)
         output = output.view(output.size()[0], -1)
         output = self.fc1(output)
         return output
